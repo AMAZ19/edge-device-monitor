@@ -1,0 +1,4 @@
+Device: amaza
+Purpose: IoT Cloud Learning
+Week: 1
+
