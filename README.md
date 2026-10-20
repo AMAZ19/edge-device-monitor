@@ -27,6 +27,7 @@ The service runs automatically using systemd and stores the latest device status
 ├── device_info.txt
 ├── .gitignore
 └── README.md
+```
 
 ## Usage
 
@@ -34,6 +35,19 @@ Run the device status collector manually:
 
 ```bash
 ./scripts/device_status.sh
+```
+
+View the latest generated device status:
+```bash
 cat data/device_status.json
+```
+
+Monitor the log output in real time:
+```bash
 tail -f logs/device_status.log
+```
+
+Subscribe to the MQTT device status topic:
+```bash
 mosquitto_sub -h localhost -t "iot/device/status"
+```
