@@ -13,7 +13,23 @@ except ValueError:
 	print("Invalid measurement interval. Using default: 5 seconds.")
 	interval = 5.0
 
+def on_connect(client, userdata, flags, reason_code, properties):
+    if reason_code == 0:
+        print("MQTT connection established successfully.")
+    else:
+        print(f"MQTT connection failed: {reason_code}")
+
+def on_publish(client, userdata, mid, reason_code, properties):
+    print(f"MQTT message {mid} acknowledged by broker.")
+
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    print(f"MQTT disconnected: {reason_code}")
+
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+mqtt_client.on_connect = on_connect
+mqtt_client.on_publish = on_publish
+mqtt_client.on_disconnect = on_disconnect
+mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
 mqtt_client.connect("localhost", 1883, 60)
 mqtt_client.loop_start()
 start_time = time.monotonic()
@@ -36,4 +52,9 @@ try:
 		time.sleep(interval)
 
 except KeyboardInterrupt:
-	print("\nDevice Simulator stopped gracefully.")
+    print("\nStopping Device Simulator...")
+
+finally:
+    mqtt_client.disconnect()
+    mqtt_client.loop_stop()
+    print("Device Simulator stopped gracefully.")
