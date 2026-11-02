@@ -13,6 +13,9 @@ The service runs automatically using systemd and stores the latest device status
 - Uses MQTT retained messages for the latest device state
 - Stores local device history in log files
 - Uses logrotate for automatic log management
+- Simulates industrial sensor telemetry using Python
+- Validates incoming MQTT sensor measurements
+- Includes automated tests using pytest and code coverage reporting
 
 ## Project Structure
 
@@ -51,3 +54,32 @@ Subscribe to the MQTT device status topic:
 ```bash
 mosquitto_sub -h localhost -t "iot/device/status"
 ```
+
+## Python Device Simulator
+
+The project includes a Python-based industrial IoT simulator
+that generates temperature, humidity, and motor current telemetry.
+
+The simulator publishes JSON messages to the MQTT topic
+`iot/device/telemetry` using QoS 1.
+
+A separate MQTT consumer subscribes to the telemetry topic
+and validates incoming sensor measurements.
+
+### Automated Testing
+
+The MQTT consumer includes automated tests covering:
+
+- Valid sensor measurements
+- Boundary values and out-of-range measurements
+- Invalid data types
+- Malformed JSON messages
+- MQTT message processing
+
+Latest verified results:
+
+- 17 passing tests
+- 87% statement coverage of the MQTT consumer
+
+For installation instructions and technical details,
+see [Device Simulator](device-simulator/README.md).
