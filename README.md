@@ -16,6 +16,7 @@ The service runs automatically using systemd and stores the latest device status
 - Simulates industrial sensor telemetry using Python
 - Validates incoming MQTT sensor measurements
 - Includes automated tests using pytest and code coverage reporting
+- Persists validated sensor telemetry in SQLite
 
 ## Project Structure
 
@@ -63,8 +64,13 @@ that generates temperature, humidity, and motor current telemetry.
 The simulator publishes JSON messages to the MQTT topic
 `iot/device/telemetry` using QoS 1.
 
-A separate MQTT consumer subscribes to the telemetry topic
-and validates incoming sensor measurements.
+A separate MQTT consumer subscribes to the telemetry topic,
+validates incoming sensor measurements, and stores telemetry
+in SQLite when all three sensor values pass validation.
+
+The database is created automatically at `data/telemetry.db`.
+Stored measurements remain available after the consumer stops.
+Local database files are excluded from Git.
 
 ### Automated Testing
 
@@ -78,8 +84,13 @@ The MQTT consumer includes automated tests covering:
 
 Latest verified results:
 
-- 17 passing tests
-- 87% statement coverage of the MQTT consumer
+- 21 passing tests using isolated temporary databases
+- 78% statement coverage of the MQTT consumer
+- 100% statement coverage of the SQLite storage module
+- 81% combined statement coverage
+
+Manual verification confirmed MQTT-to-SQLite storage,
+persistence after shutdown, and clean shutdown with Ctrl+C.
 
 For installation instructions and technical details,
 see [Device Simulator](device-simulator/README.md).

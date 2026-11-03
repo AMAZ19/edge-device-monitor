@@ -2,3 +2,16 @@ logs/
 data/device_status.json
 
 .coverage
+
+# Local SQLite database and companion files
+data/telemetry.db
+data/telemetry.db-*
+
+# Python environments and caches
+.venv/
+.venc/
+__pycache__/
+.pytest_cache/
+
+# Editor backup files
+*.bak

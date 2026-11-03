@@ -63,8 +63,7 @@ DEVICE_ID=industrial-device-001 MEASUREMENT_INTERVAL=5 python device_simulator.p
 ```
 
 ## Notes
-
-This project uses simulated measurements for local development and testing. The operating hours counter resets when the application restarts. MQTT authentication, TLS encryption, and persistent telemetry storage are not yet implemented.
+This project uses simulated measurements for local development and testing. The operating hours counter resets when the simulator restarts. MQTT authentication and TLS encryption are not yet implemented.
 
 ## MQTT Telemetry Consumer
 
@@ -86,6 +85,34 @@ Invalid data types and out-of-range measurements are reported without stopping t
 .venc/bin/python mqtt_consumer.py
 ```
 
+## Persistent Telemetry Storage
+
+The MQTT consumer stores telemetry in SQLite when all three sensor
+measurements pass validation. Messages with out-of-range sensor values
+are not stored.
+
+The database is created automatically at `../data/telemetry.db`,
+relative to this directory. Its location is independent of the
+working directory used to start the consumer.
+
+Each record contains:
+
+- An automatically assigned ID
+- Device ID
+- Timestamp
+- Temperature
+- Humidity
+- Motor current
+- Operating hours
+
+The storage module uses parameterized SQL statements, commits
+successful transactions, and explicitly closes database connections.
+
+Database errors are reported by the consumer. Press Ctrl+C to
+disconnect and stop the consumer.
+
+The local database and its companion files are excluded from Git.
+
 ## Automated Testing
 
 The project uses pytest for automated sensor validation and MQTT message-processing tests.
@@ -105,13 +132,22 @@ Run the test suite:
 Measure code coverage:
 
 ```bash
-.venc/bin/python -m pytest test_mqtt_consumer.py --cov=mqtt_consumer --cov-report=term-missing
+.venc/bin/python -m pytest test_mqtt_consumer.py --cov=mqtt_consumer --cov=telemetry_storage --cov-report=term-missing
 ```
 
 ### Test Results
 
-- 17 automated tests passing
-- 87% statement coverage of `mqtt_consumer.py` at the latest verified test run
-- Coverage includes sensor validation, boundary values, invalid data types, and simulated MQTT messages
+- 21 automated tests passing
+- 78% statement coverage of `mqtt_consumer.py`
+- 100% statement coverage of `telemetry_storage.py`
+- 81% combined statement coverage
 
-The remaining uncovered code includes MQTT connection handling and application startup, which require additional integration testing.
+Tests cover sensor validation, malformed JSON, MQTT message
+processing, successful database insertion, and rejection of
+out-of-range measurements. Each test uses a temporary database.
+
+Uncovered code includes MQTT connection handling, database error
+handling, and application startup and shutdown.
+
+Manual verification confirmed MQTT-to-SQLite storage, persistence
+after consumer shutdown, and clean shutdown with Ctrl+C.
