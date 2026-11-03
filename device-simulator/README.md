@@ -113,6 +113,46 @@ disconnect and stop the consumer.
 
 The local database and its companion files are excluded from Git.
 
+## Telemetry Queries and Statistics
+
+Run these examples from the `device-simulator` directory after
+the consumer has initialized the database.
+
+Retrieve the latest three stored measurements:
+
+```bash
+.venc/bin/python -c "from telemetry_storage import get_latest_telemetry; from pprint import pprint; pprint(get_latest_telemetry(limit=3))"
+```
+
+Retrieve measurements for one device:
+
+```bash
+.venc/bin/python -c "from telemetry_storage import get_latest_telemetry; from pprint import pprint; pprint(get_latest_telemetry(device_id='week04-mqtt-test'))"
+```
+
+`get_latest_telemetry` returns a list of dictionaries, ordered by
+descending record ID (most recently stored first). The default
+limit is 10. An empty result returns an empty list.
+
+The limit must be a positive integer; booleans are rejected.
+An optional device ID must be a non-empty string.
+Invalid arguments raise `ValueError`.
+
+Calculate temperature statistics across all stored measurements:
+
+```bash
+.venc/bin/python -c "from telemetry_storage import get_temperature_statistics; from pprint import pprint; pprint(get_temperature_statistics())"
+```
+
+Pass `device_id` to restrict statistics to one device.
+
+The result contains the measurement count and minimum, average,
+and maximum temperature. When no measurements match, the count
+is zero and the temperature statistics are `None`.
+
+Queries use SQL parameters for filter values and limits.
+Database connections are explicitly closed after each query.
+
 ## Automated Testing
 
 The project uses pytest for automated sensor validation and MQTT message-processing tests.
@@ -137,14 +177,18 @@ Measure code coverage:
 
 ### Test Results
 
-- 21 automated tests passing
+- 45 automated tests passing
 - 78% statement coverage of `mqtt_consumer.py`
 - 100% statement coverage of `telemetry_storage.py`
-- 81% combined statement coverage
+- 87% combined statement coverage
 
 Tests cover sensor validation, malformed JSON, MQTT message
 processing, successful database insertion, and rejection of
-out-of-range measurements. Each test uses a temporary database.
+out-of-range measurements.
+
+Query tests cover ordering, result limits, device filtering,
+temperature statistics, empty results, and invalid arguments.
+Each test uses an isolated temporary database.
 
 Uncovered code includes MQTT connection handling, database error
 handling, and application startup and shutdown.

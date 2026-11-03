@@ -226,3 +226,140 @@ def test_invalid_sensors_not_saved(
         ).fetchone()[0]
 
     assert count == 0
+
+@pytest.fixture
+def stored_telemetry(test_database):
+    for device_id, temperature in [
+        ("device-a", 24.0),
+        ("device-b", 25.0),
+        ("device-a", 26.0),
+    ]:
+        telemetry_storage.save_telemetry({
+            "device_id": device_id,
+            "timestamp": "2026-11-03T18:00:00+00:00",
+            "temperature": temperature,
+            "humidity": 50.0,
+            "motor_current": 1.5,
+            "operating_hours": 0.1,
+        })
+
+
+def test_latest_telemetry_empty_database():
+    assert telemetry_storage.get_latest_telemetry() == []
+
+
+def test_latest_telemetry_order_and_fields(stored_telemetry):
+    rows = telemetry_storage.get_latest_telemetry()
+
+    assert [row["id"] for row in rows] == [3, 2, 1]
+    assert rows[0] == {
+        "id": 3,
+        "device_id": "device-a",
+        "timestamp": "2026-11-03T18:00:00+00:00",
+        "temperature": 26.0,
+        "humidity": 50.0,
+        "motor_current": 1.5,
+        "operating_hours": 0.1,
+    }
+
+
+def test_latest_telemetry_limit(stored_telemetry):
+    rows = telemetry_storage.get_latest_telemetry(limit=2)
+
+    assert [row["id"] for row in rows] == [3, 2]
+
+
+def test_latest_telemetry_device_filter(stored_telemetry):
+    rows = telemetry_storage.get_latest_telemetry(
+        device_id="device-a"
+    )
+
+    assert [row["id"] for row in rows] == [3, 1]
+    assert all(row["device_id"] == "device-a" for row in rows)
+
+
+def test_latest_telemetry_filter_with_limit(stored_telemetry):
+    rows = telemetry_storage.get_latest_telemetry(
+        limit=1, device_id="device-a"
+    )
+
+    assert [row["id"] for row in rows] == [3]
+
+
+def test_latest_telemetry_unknown_device(stored_telemetry):
+    rows = telemetry_storage.get_latest_telemetry(
+        device_id="unknown-device"
+    )
+
+    assert rows == []
+
+
+@pytest.mark.parametrize("limit", [0, -1, True, 1.5, "3", None])
+def test_latest_telemetry_invalid_limit(limit):
+    with pytest.raises(
+        ValueError, match="limit must be a positive integer"
+    ):
+        telemetry_storage.get_latest_telemetry(limit=limit)
+
+
+@pytest.mark.parametrize("device_id", ["", "   ", 123, True])
+def test_latest_telemetry_invalid_device_id(device_id):
+    with pytest.raises(
+        ValueError, match="device_id must be a non-empty string"
+    ):
+        telemetry_storage.get_latest_telemetry(
+            device_id=device_id
+        )
+
+def test_temperature_statistics_all_devices(stored_telemetry):
+    result = telemetry_storage.get_temperature_statistics()
+
+    assert result["measurement_count"] == 3
+    assert result["min_temperature"] == 24.0
+    assert result["avg_temperature"] == pytest.approx(25.0)
+    assert result["max_temperature"] == 26.0
+
+
+def test_temperature_statistics_device_filter(stored_telemetry):
+    result = telemetry_storage.get_temperature_statistics(
+        device_id="device-a"
+    )
+
+    assert result["measurement_count"] == 2
+    assert result["min_temperature"] == 24.0
+    assert result["avg_temperature"] == pytest.approx(25.0)
+    assert result["max_temperature"] == 26.0
+
+
+def test_temperature_statistics_empty_database():
+    result = telemetry_storage.get_temperature_statistics()
+
+    assert result == {
+        "measurement_count": 0,
+        "min_temperature": None,
+        "avg_temperature": None,
+        "max_temperature": None,
+    }
+
+
+def test_temperature_statistics_unknown_device(stored_telemetry):
+    result = telemetry_storage.get_temperature_statistics(
+        device_id="unknown-device"
+    )
+
+    assert result == {
+        "measurement_count": 0,
+        "min_temperature": None,
+        "avg_temperature": None,
+        "max_temperature": None,
+    }
+
+
+@pytest.mark.parametrize("device_id", ["", "   ", 123, True])
+def test_temperature_statistics_invalid_device_id(device_id):
+    with pytest.raises(
+        ValueError, match="device_id must be a non-empty string"
+    ):
+        telemetry_storage.get_temperature_statistics(
+            device_id=device_id
+        )

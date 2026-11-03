@@ -17,6 +17,8 @@ The service runs automatically using systemd and stores the latest device status
 - Validates incoming MQTT sensor measurements
 - Includes automated tests using pytest and code coverage reporting
 - Persists validated sensor telemetry in SQLite
+- Queries stored telemetry with result limits and device filtering
+- Calculates minimum, average, and maximum temperature
 
 ## Project Structure
 
@@ -72,6 +74,18 @@ The database is created automatically at `data/telemetry.db`.
 Stored measurements remain available after the consumer stops.
 Local database files are excluded from Git.
 
+### Telemetry Queries and Statistics
+
+The SQLite storage module supports retrieving the latest stored
+measurements, limiting results, and filtering by device ID.
+Results are ordered by descending record ID.
+
+Temperature statistics include the measurement count and minimum,
+average, and maximum temperature, optionally filtered by device.
+
+Query arguments are validated, and SQL parameters are used for
+filter values and result limits.
+
 ### Automated Testing
 
 The MQTT consumer includes automated tests covering:
@@ -81,13 +95,17 @@ The MQTT consumer includes automated tests covering:
 - Invalid data types
 - Malformed JSON messages
 - MQTT message processing
+- SQLite persistence and telemetry queries
+- Result ordering, limits, and device filtering
+- Temperature statistics and empty query results
+- Query argument validation
 
 Latest verified results:
 
-- 21 passing tests using isolated temporary databases
+- 45 passing tests using isolated temporary databases
 - 78% statement coverage of the MQTT consumer
 - 100% statement coverage of the SQLite storage module
-- 81% combined statement coverage
+- 87% combined statement coverage
 
 Manual verification confirmed MQTT-to-SQLite storage,
 persistence after shutdown, and clean shutdown with Ctrl+C.
