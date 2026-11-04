@@ -153,9 +153,55 @@ is zero and the temperature statistics are `None`.
 Queries use SQL parameters for filter values and limits.
 Database connections are explicitly closed after each query.
 
+## Telemetry Command-Line Interface
+
+Run these commands from the `device-simulator` directory.
+The database must already have been initialized by the consumer.
+
+Show command help:
+
+```bash
+.venc/bin/python telemetry_cli.py --help
+```
+
+Retrieve the latest three measurements:
+
+```bash
+.venc/bin/python telemetry_cli.py latest --limit 3
+```
+
+Retrieve measurements for one device:
+
+```bash
+.venc/bin/python telemetry_cli.py latest --device-id week04-mqtt-test
+```
+
+Calculate temperature statistics for all devices:
+
+```bash
+.venc/bin/python telemetry_cli.py stats
+```
+
+Calculate statistics for one device:
+
+```bash
+.venc/bin/python telemetry_cli.py stats --device-id week04-mqtt-test
+```
+
+Results are printed as formatted JSON. The default measurement
+limit is 10. Empty query results produce `[]`; statistics without
+matching measurements contain a count of zero and `null`
+temperature values.
+
+Invalid arguments are reported on standard error with exit code 2.
+Database errors are reported on standard error with exit code 1.
+Successful commands finish with exit code 0.
+
 ## Automated Testing
 
-The project uses pytest for automated sensor validation and MQTT message-processing tests.
+The project uses pytest to test sensor validation, MQTT message
+processing, SQLite storage, telemetry queries, and the command-line
+interface.
 
 Install development dependencies:
 
@@ -177,10 +223,11 @@ Measure code coverage:
 
 ### Test Results
 
-- 45 automated tests passing
+- 54 automated tests passing
 - 78% statement coverage of `mqtt_consumer.py`
 - 100% statement coverage of `telemetry_storage.py`
-- 87% combined statement coverage
+- 96% statement coverage of `telemetry_cli.py`
+- 89% combined statement coverage
 
 Tests cover sensor validation, malformed JSON, MQTT message
 processing, successful database insertion, and rejection of
@@ -188,7 +235,10 @@ out-of-range measurements.
 
 Query tests cover ordering, result limits, device filtering,
 temperature statistics, empty results, and invalid arguments.
-Each test uses an isolated temporary database.
+Tests that access storage use isolated temporary databases.
+
+CLI tests cover JSON output, device filtering, result limits,
+temperature statistics, invalid arguments, and database errors.
 
 Uncovered code includes MQTT connection handling, database error
 handling, and application startup and shutdown.

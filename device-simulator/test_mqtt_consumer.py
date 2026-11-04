@@ -143,20 +143,6 @@ def test_on_message_invalid_humidity(capsys):
     assert "Humidity validation: FAILED - Out of range" in output
     assert "Motor Current validation: PASSED" in output
 
-def test_on_message_invalid_humidity(capsys):
-    message = SimpleNamespace(
-        topic="iot/device/telemetry",
-        payload=b'{"device_id":"test-005","temperature":25,"humidity":75,"motor_current":1.5}'
-    )
-
-    on_message(None, None, message)
-
-    output = capsys.readouterr().out
-
-    assert "Temperature validation: PASSED" in output
-    assert "Humidity validation: FAILED - Out of range" in output
-    assert "Motor Current validation: PASSED" in output
-
 
 def test_on_message_invalid_motor_current(capsys):
     message = SimpleNamespace(

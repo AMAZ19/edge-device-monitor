@@ -19,6 +19,7 @@ The service runs automatically using systemd and stores the latest device status
 - Persists validated sensor telemetry in SQLite
 - Queries stored telemetry with result limits and device filtering
 - Calculates minimum, average, and maximum temperature
+- Provides a command-line interface for telemetry queries and statistics
 
 ## Project Structure
 
@@ -86,9 +87,26 @@ average, and maximum temperature, optionally filtered by device.
 Query arguments are validated, and SQL parameters are used for
 filter values and result limits.
 
+### Telemetry Command-Line Interface
+
+From the `device-simulator` directory, retrieve stored measurements
+or calculate temperature statistics:
+
+```bash
+.venc/bin/python telemetry_cli.py latest --limit 3
+.venc/bin/python telemetry_cli.py stats --device-id week04-mqtt-test
+```
+
+The database must already have been initialized by the consumer.
+Both commands support optional device filtering and print formatted
+JSON. Invalid arguments return exit code 2; database errors return
+exit code 1.
+
+Use `telemetry_cli.py --help` for available commands and options.
+
 ### Automated Testing
 
-The MQTT consumer includes automated tests covering:
+The Python components include automated tests covering:
 
 - Valid sensor measurements
 - Boundary values and out-of-range measurements
@@ -99,13 +117,16 @@ The MQTT consumer includes automated tests covering:
 - Result ordering, limits, and device filtering
 - Temperature statistics and empty query results
 - Query argument validation
+- CLI JSON output and command options
+- CLI argument validation and database error handling
 
 Latest verified results:
 
-- 45 passing tests using isolated temporary databases
+- 54 passing tests; storage tests use isolated temporary databases
 - 78% statement coverage of the MQTT consumer
 - 100% statement coverage of the SQLite storage module
-- 87% combined statement coverage
+- 96% statement coverage of the telemetry CLI
+- 89% combined statement coverage
 
 Manual verification confirmed MQTT-to-SQLite storage,
 persistence after shutdown, and clean shutdown with Ctrl+C.
