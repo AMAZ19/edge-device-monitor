@@ -30,7 +30,11 @@ mqtt_client.on_connect = on_connect
 mqtt_client.on_publish = on_publish
 mqtt_client.on_disconnect = on_disconnect
 mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
-mqtt_client.connect("localhost", 1883, 60)
+mqtt_client.connect(
+	os.getenv("MQTT_HOST", "localhost"),
+	int(os.getenv("MQTT_PORT", "1883")),
+	60
+)
 mqtt_client.loop_start()
 start_time = time.monotonic()
 

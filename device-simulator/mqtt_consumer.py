@@ -1,3 +1,4 @@
+import os
 import paho.mqtt.client as mqtt
 import json
 from telemetry_storage import initialize_database, save_telemetry
@@ -87,7 +88,11 @@ if __name__ == "__main__":
     initialize_database()
 
     try:
-        mqtt_client.connect("localhost", 1883, 60)
+        mqtt_client.connect(
+            os.getenv("MQTT_HOST", "localhost"),
+            int(os.getenv("MQTT_PORT", "1883")),
+            60
+        )
         mqtt_client.loop_forever()
     except KeyboardInterrupt:
         print("\nConsumer stopped.")

@@ -21,3 +21,6 @@ __pycache__/
 .env.*
 !.env.example
 .webhook.env
+
+.compose.env
+compose.yaml.before-db.bak

@@ -1,0 +1,74 @@
+name: edge-device-monitor
+
+services:
+  mosquitto:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    volumes:
+      - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+    networks:
+      - iot-network
+
+  simulator:
+    build:
+      context: ./device-simulator
+      dockerfile: Dockerfile
+    image: edge-device-simulator:1.0
+    restart: unless-stopped
+    depends_on:
+      - mosquitto
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      MEASUREMENT_INTERVAL: "5"
+      DEVICE_ID: edge-device-compose-001
+    networks:
+      - iot-network
+
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    env_file:
+      - .compose.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - iot-network
+
+  consumer:
+    build:
+      context: ./device-simulator
+      dockerfile: Dockerfile
+    image: edge-device-simulator:1.0
+    command: ["python", "mqtt_consumer.py"]
+    restart: unless-stopped
+    depends_on:
+      mosquitto:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .compose.env
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+    volumes:
+      - sqlite_data:/data
+    networks:
+      - iot-network
+
+networks:
+  iot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  sqlite_data:
