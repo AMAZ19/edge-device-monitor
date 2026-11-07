@@ -2,6 +2,8 @@ import paho.mqtt.client as mqtt
 import json
 from telemetry_storage import initialize_database, save_telemetry
 import sqlite3
+import psycopg
+from postgres_storage import save_telemetry as save_to_postgres
 
 def on_connect(client, userdata, flags, reason_code, properties):
         if reason_code == 0:
@@ -63,6 +65,12 @@ def on_message(client, userdata, msg):
                 if all(sensor_checks):
                     save_telemetry(device)
                     print("Telemetry saved to SQLite.")
+
+                    try:
+                        save_to_postgres(device)
+                        print("Telemetry saved to PostgreSQL.")
+                    except psycopg.Error as error:
+                        print(f"PostgreSQL error: {error}")
                 else:
                     print("Telemetry not saved: sensor validation failed.")
 

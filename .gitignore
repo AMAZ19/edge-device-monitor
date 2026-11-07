@@ -15,3 +15,9 @@ __pycache__/
 
 # Editor backup files
 *.bak
+
+# Local database credentials
+.env
+.env.*
+!.env.example
+.webhook.env

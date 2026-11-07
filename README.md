@@ -133,3 +133,51 @@ persistence after shutdown, and clean shutdown with Ctrl+C.
 
 For installation instructions and technical details,
 see [Device Simulator](device-simulator/README.md).
+
+## Monitoring and MQTT Alerting
+
+### Architecture
+
+Device Simulator -> Mosquitto -> MQTT Consumer -> PostgreSQL -> Grafana -> MQTT Alerts
+
+Validated telemetry is stored in SQLite and PostgreSQL.
+
+### Grafana Dashboard
+
+Dashboard: `IoT Device Monitor`
+
+The dashboard visualizes:
+- Temperature (°C)
+- Humidity (%)
+- Motor current (A)
+
+Data source: PostgreSQL (`iot_telemetry`).
+
+### Temperature Alert
+
+- Rule: `IoT Device - High Temperature Alert`
+- Device: `edge-device-001`
+- Threshold: Temperature > 28 °C
+- Pending period: 0 seconds
+- Contact point: `IoT MQTT Alerts`
+- MQTT topic: `iot/device/alerts`
+- Message format: JSON
+
+### End-to-End Test
+
+Successfully verified on November 7, 2026.
+
+Grafana detected 28.83 °C and published a firing
+notification through MQTT.
+
+### Monitor MQTT Alerts
+
+Run:
+
+    mosquitto_sub -h localhost -t 'iot/device/alerts' -v
+
+### Security
+
+Database credentials are stored in local environment files.
+The MQTT broker currently listens on localhost.
+Production deployments should use MQTT authentication and TLS.
