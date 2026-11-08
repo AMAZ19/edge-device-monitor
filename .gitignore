@@ -24,3 +24,4 @@ __pycache__/
 
 .compose.env
 compose.yaml.before-db.bak
+docker/grafana/admin_password.txt

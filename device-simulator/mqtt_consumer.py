@@ -5,13 +5,29 @@ from telemetry_storage import initialize_database, save_telemetry
 import sqlite3
 import psycopg
 from postgres_storage import save_telemetry as save_to_postgres
+from metrics import (
+    MQTT_MESSAGES_RECEIVED,
+    MQTT_INVALID_MESSAGES,
+    MQTT_CONNECTED,
+    TELEMETRY_SAVED,
+    TELEMETRY_STORAGE_ERRORS,
+    start_metrics_server,
+)
 
 def on_connect(client, userdata, flags, reason_code, properties):
         if reason_code == 0:
+                MQTT_CONNECTED.set(1)
                 print("consumer connected to MQTT broker.")
                 client.subscribe("iot/device/telemetry", qos=1)
         else:
+                MQTT_CONNECTED.set(0)
                 print(f"connection failed: {reason_code}")
+
+
+def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
+    MQTT_CONNECTED.set(0)
+    print(f"Consumer disconnected from MQTT broker: {reason_code}")
+
 
 def validate_sensor_value(value, minimum, maximum):
     if isinstance(value, bool) or not isinstance(value, (int, float)):
@@ -23,6 +39,7 @@ def validate_sensor_value(value, minimum, maximum):
     return True, "Valid"
 
 def on_message(client, userdata, msg):
+        MQTT_MESSAGES_RECEIVED.inc()
         print(f"Message received on topic: {msg.topic}")
 
         try:
@@ -65,27 +82,35 @@ def on_message(client, userdata, msg):
 
                 if all(sensor_checks):
                     save_telemetry(device)
+                    TELEMETRY_SAVED.labels(database="sqlite").inc()
                     print("Telemetry saved to SQLite.")
 
                     try:
                         save_to_postgres(device)
+                        TELEMETRY_SAVED.labels(database="postgres").inc()
                         print("Telemetry saved to PostgreSQL.")
                     except psycopg.Error as error:
+                        TELEMETRY_STORAGE_ERRORS.labels(database="postgres").inc()
                         print(f"PostgreSQL error: {error}")
                 else:
+                    MQTT_INVALID_MESSAGES.inc()
                     print("Telemetry not saved: sensor validation failed.")
 
         except (json.JSONDecodeError, UnicodeDecodeError, KeyError) as error:
+                MQTT_INVALID_MESSAGES.inc()
                 print(f"Invalid sensor data: {error}")
         except sqlite3.Error as error:
+                TELEMETRY_STORAGE_ERRORS.labels(database="sqlite").inc()
                 print(f"Database error: {error}")
 
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
+mqtt_client.on_disconnect = on_disconnect
 
 if __name__ == "__main__":
     initialize_database()
+    start_metrics_server(int(os.getenv("METRICS_PORT", "8000")))
 
     try:
         mqtt_client.connect(
