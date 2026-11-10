@@ -181,3 +181,48 @@ Run:
 Database credentials are stored in local environment files.
 The MQTT broker currently listens on localhost.
 Production deployments should use MQTT authentication and TLS.
+
+## Monitoring and Alerting
+
+The project includes a containerized monitoring stack using
+Prometheus and Grafana.
+
+### Monitoring
+
+- Prometheus scrapes telemetry and health metrics from the MQTT consumer.
+- Grafana provides a provisioned dashboard with nine panels.
+- Metrics include MQTT connectivity, message counts, storage
+  operations, temperature, humidity, motor current, and timestamps
+  of the most recent telemetry and database writes.
+
+### Alerting
+
+Grafana evaluates the following alert rules:
+
+| Alert | Description |
+| --- | --- |
+| IoT Consumer Down | Detects an unavailable MQTT consumer |
+| IoT Telemetry Missing | Detects missing incoming telemetry |
+| IoT PostgreSQL Storage Stalled | Detects missing PostgreSQL writes |
+
+Alert notifications are delivered to an authenticated HTTP webhook,
+which publishes alert events to the MQTT topic `iot/device/alerts`.
+
+The webhook accepts bearer-token authentication. Credentials are
+provided through local environment configuration and are not
+committed to the repository.
+
+### Verification
+
+The monitoring stack was validated using automated Python tests,
+Docker Compose health checks, Prometheus queries, and Grafana
+alert evaluations. The webhook was also tested using Grafana's
+contact-point test notification.
+
+### Local Access
+
+- Grafana: http://localhost:3001
+- Prometheus: http://localhost:9090
+
+The Grafana URL assumes the appropriate VM port forwarding
+when accessing the stack from a Windows host.

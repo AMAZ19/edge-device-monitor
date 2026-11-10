@@ -1,4 +1,5 @@
 import os
+import time
 import paho.mqtt.client as mqtt
 import json
 from telemetry_storage import initialize_database, save_telemetry
@@ -7,8 +8,13 @@ import psycopg
 from postgres_storage import save_telemetry as save_to_postgres
 from metrics import (
     MQTT_MESSAGES_RECEIVED,
+    LAST_MESSAGE_TIMESTAMP,
+    LAST_SAVED_TIMESTAMP,
     MQTT_INVALID_MESSAGES,
     MQTT_CONNECTED,
+    TEMPERATURE,
+    HUMIDITY,
+    MOTOR_CURRENT,
     TELEMETRY_SAVED,
     TELEMETRY_STORAGE_ERRORS,
     start_metrics_server,
@@ -40,6 +46,7 @@ def validate_sensor_value(value, minimum, maximum):
 
 def on_message(client, userdata, msg):
         MQTT_MESSAGES_RECEIVED.inc()
+        LAST_MESSAGE_TIMESTAMP.set(time.time())
         print(f"Message received on topic: {msg.topic}")
 
         try:
@@ -81,13 +88,19 @@ def on_message(client, userdata, msg):
                 )
 
                 if all(sensor_checks):
+                    TEMPERATURE.set(temperature)
+                    HUMIDITY.set(humidity)
+                    MOTOR_CURRENT.set(motor_current)
+
                     save_telemetry(device)
                     TELEMETRY_SAVED.labels(database="sqlite").inc()
+                    LAST_SAVED_TIMESTAMP.labels(database="sqlite").set(time.time())
                     print("Telemetry saved to SQLite.")
 
                     try:
                         save_to_postgres(device)
                         TELEMETRY_SAVED.labels(database="postgres").inc()
+                        LAST_SAVED_TIMESTAMP.labels(database="postgres").set(time.time())
                         print("Telemetry saved to PostgreSQL.")
                     except psycopg.Error as error:
                         TELEMETRY_STORAGE_ERRORS.labels(database="postgres").inc()

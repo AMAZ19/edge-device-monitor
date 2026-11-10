@@ -94,7 +94,7 @@ services:
     secrets:
       - grafana_admin_password
     ports:
-      - "127.0.0.1:3001:3000"
+      - "3001:3000"
     volumes:
       - grafana_data:/var/lib/grafana
       - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
@@ -104,6 +104,22 @@ services:
     networks:
       - iot-network
 
+
+
+  mqtt-webhook:
+    build:
+      context: ./device-simulator
+      dockerfile: Dockerfile.webhook
+    restart: unless-stopped
+    env_file:
+      - ./device-simulator/.webhook.env
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: "1883"
+    depends_on:
+      - mosquitto
+    networks:
+      - iot-network
 
 networks:
   iot-network:

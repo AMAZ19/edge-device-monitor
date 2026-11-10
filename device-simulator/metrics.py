@@ -28,5 +28,34 @@ TELEMETRY_STORAGE_ERRORS = Counter(
 )
 
 
+
+LAST_MESSAGE_TIMESTAMP = Gauge(
+    "iot_last_message_timestamp_seconds",
+    "Unix timestamp of the last received MQTT message",
+)
+
+LAST_SAVED_TIMESTAMP = Gauge(
+    "iot_last_saved_timestamp_seconds",
+    "Unix timestamp of the last successful telemetry storage",
+    ["database"],
+)
+
+
 def start_metrics_server(port=8000):
     start_http_server(port)
+
+
+TEMPERATURE = Gauge(
+    "iot_temperature_celsius",
+    "Latest valid temperature in Celsius",
+)
+
+HUMIDITY = Gauge(
+    "iot_humidity_percent",
+    "Latest valid relative humidity percentage",
+)
+
+MOTOR_CURRENT = Gauge(
+    "iot_motor_current_amperes",
+    "Latest valid motor current in amperes",
+)
