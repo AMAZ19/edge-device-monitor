@@ -13,7 +13,7 @@ services:
     build:
       context: ./device-simulator
       dockerfile: Dockerfile
-    image: edge-device-simulator:1.0
+    image: edge-device-simulator:1.3-alpine
     restart: unless-stopped
     depends_on:
       - mosquitto
@@ -45,7 +45,7 @@ services:
     build:
       context: ./device-simulator
       dockerfile: Dockerfile
-    image: edge-device-simulator:1.0
+    image: edge-device-simulator:1.3-alpine
     command: ["python", "mqtt_consumer.py"]
     restart: unless-stopped
     depends_on:
