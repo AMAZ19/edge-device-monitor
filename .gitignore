@@ -25,3 +25,9 @@ __pycache__/
 .compose.env
 compose.yaml.before-db.bak
 docker/grafana/admin_password.txt
+
+# Local MQTT TLS certificates and private keys
+docker/mosquitto/certs/
+
+docker/mosquitto/auth/
+docker/mosquitto/secrets/

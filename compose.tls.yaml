@@ -1,0 +1,50 @@
+services:
+  mosquitto:
+    volumes:
+      - ./docker/mosquitto/auth/passwords:/mosquitto/auth/passwords:ro
+  simulator:
+    secrets:
+      - iot_simulator
+
+    environment:
+      MQTT_USERNAME: iot_simulator
+      MQTT_PASSWORD_FILE: /run/secrets/iot_simulator
+      MQTT_TLS_ENABLED: "true"
+      MQTT_PORT: "8883"
+      MQTT_CA_CERT: /app/certs/ca.crt
+    volumes:
+      - ./docker/mosquitto/certs/ca.crt:/app/certs/ca.crt:ro
+
+  consumer:
+    secrets:
+      - iot_consumer
+
+    environment:
+      MQTT_USERNAME: iot_consumer
+      MQTT_PASSWORD_FILE: /run/secrets/iot_consumer
+      MQTT_TLS_ENABLED: "true"
+      MQTT_PORT: "8883"
+      MQTT_CA_CERT: /app/certs/ca.crt
+    volumes:
+      - ./docker/mosquitto/certs/ca.crt:/app/certs/ca.crt:ro
+
+  mqtt-webhook:
+    secrets:
+      - iot_webhook
+
+    environment:
+      MQTT_USERNAME: iot_webhook
+      MQTT_PASSWORD_FILE: /run/secrets/iot_webhook
+      MQTT_TLS_ENABLED: "true"
+      MQTT_PORT: "8883"
+      MQTT_CA_CERT: /app/certs/ca.crt
+    volumes:
+      - ./docker/mosquitto/certs/ca.crt:/app/certs/ca.crt:ro
+
+secrets:
+  iot_simulator:
+    file: ./docker/mosquitto/secrets/iot_simulator.txt
+  iot_consumer:
+    file: ./docker/mosquitto/secrets/iot_consumer.txt
+  iot_webhook:
+    file: ./docker/mosquitto/secrets/iot_webhook.txt

@@ -1,3 +1,4 @@
+from mqtt_security import configure_mqtt_client, configure_mqtt_auth, get_mqtt_port
 import paho.mqtt.client as mqtt
 import os
 import json
@@ -26,13 +27,15 @@ def on_disconnect(client, userdata, disconnect_flags, reason_code, properties):
     print(f"MQTT disconnected: {reason_code}")
 
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+configure_mqtt_auth(mqtt_client)
+configure_mqtt_client(mqtt_client)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_publish = on_publish
 mqtt_client.on_disconnect = on_disconnect
 mqtt_client.reconnect_delay_set(min_delay=1, max_delay=30)
 mqtt_client.connect(
 	os.getenv("MQTT_HOST", "localhost"),
-	int(os.getenv("MQTT_PORT", "1883")),
+	get_mqtt_port(),
 	60
 )
 mqtt_client.loop_start()

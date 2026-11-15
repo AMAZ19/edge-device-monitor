@@ -1,3 +1,4 @@
+from mqtt_security import configure_mqtt_client, configure_mqtt_auth, get_mqtt_port
 import os
 import time
 import paho.mqtt.client as mqtt
@@ -117,6 +118,8 @@ def on_message(client, userdata, msg):
                 print(f"Database error: {error}")
 
 mqtt_client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
+configure_mqtt_auth(mqtt_client)
+configure_mqtt_client(mqtt_client)
 mqtt_client.on_connect = on_connect
 mqtt_client.on_message = on_message
 mqtt_client.on_disconnect = on_disconnect
@@ -128,7 +131,7 @@ if __name__ == "__main__":
     try:
         mqtt_client.connect(
             os.getenv("MQTT_HOST", "localhost"),
-            int(os.getenv("MQTT_PORT", "1883")),
+            get_mqtt_port(),
             60
         )
         mqtt_client.loop_forever()

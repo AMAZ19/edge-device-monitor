@@ -5,6 +5,7 @@ import os
 
 from flask import Flask, jsonify, request
 import paho.mqtt.publish as publish
+from mqtt_security import create_tls_context, get_mqtt_port, get_mqtt_credentials
 
 app = Flask(__name__)
 
@@ -14,7 +15,7 @@ logging.basicConfig(
 )
 
 MQTT_HOST = os.getenv("MQTT_HOST", "localhost")
-MQTT_PORT = int(os.getenv("MQTT_PORT", "1883"))
+MQTT_PORT = get_mqtt_port()
 MQTT_TOPIC = "iot/device/alerts"
 WEBHOOK_TOKEN = os.getenv("GRAFANA_WEBHOOK_TOKEN", "")
 
@@ -58,6 +59,12 @@ def grafana_alert():
             port=MQTT_PORT,
             qos=1,
             retain=False,
+            tls=create_tls_context(),
+            auth=(
+                dict(zip(('username', 'password'), credentials))
+                if (credentials := get_mqtt_credentials())
+                else None
+            ),
         )
     except Exception:
         app.logger.exception("MQTT publish failed")

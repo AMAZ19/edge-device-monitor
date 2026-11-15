@@ -12,6 +12,7 @@ RUN addgroup -S appgroup \
 
 COPY --chown=appuser:appgroup device_simulator.py .
 COPY --chown=appuser:appgroup mqtt_consumer.py .
+COPY --chown=appuser:appgroup mqtt_security.py .
 COPY --chown=appuser:appgroup metrics.py .
 COPY --chown=appuser:appgroup telemetry_storage.py .
 COPY --chown=appuser:appgroup postgres_storage.py .

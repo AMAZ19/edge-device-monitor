@@ -7,6 +7,7 @@ RUN pip install --no-cache-dir \
     paho-mqtt==2.1.0
 
 COPY grafana_mqtt_webhook.py .
+COPY mqtt_security.py .
 
 ENV PYTHONUNBUFFERED=1
 
