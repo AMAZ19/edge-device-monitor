@@ -1,12 +1,34 @@
 name: edge-device-monitor
 
 services:
+  security-monitor:
+    build:
+      context: ./device-simulator
+      dockerfile: Dockerfile.security-monitor
+    image: edge-device-security-monitor:1.0
+    restart: unless-stopped
+    user: "1883:1883"
+    environment:
+      MQTT_SECURITY_LOG_PATH: /logs/security.log
+      METRICS_PORT: "8001"
+    volumes:
+      - mosquitto_logs:/logs:ro
+    expose:
+      - "8001"
+    networks:
+      - iot-network
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
   mosquitto:
     image: eclipse-mosquitto:2
     restart: unless-stopped
     volumes:
       - ./docker/mosquitto/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
       - ./docker/mosquitto/certs:/mosquitto/certs:ro
+      - mosquitto_logs:/mosquitto/log
     networks:
       - iot-network
 
@@ -130,7 +152,11 @@ secrets:
   grafana_admin_password:
     file: ./docker/grafana/admin_password.txt
 
+
 volumes:
+  mosquitto_logs:
+    external: true
+    name: edge-device-monitor_mosquitto_logs
   postgres_data:
   sqlite_data:
   prometheus_data:

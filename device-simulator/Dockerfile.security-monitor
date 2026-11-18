@@ -1,0 +1,17 @@
+FROM python:3.12-alpine
+
+WORKDIR /app
+
+RUN pip install --no-cache-dir prometheus-client==0.26.0
+
+COPY metrics.py mqtt_security_monitor.py ./
+
+USER 1883:1883
+
+ENV PYTHONUNBUFFERED=1 \
+    MQTT_SECURITY_LOG_PATH=/logs/security.log \
+    METRICS_PORT=8001
+
+EXPOSE 8001
+
+CMD ["python", "mqtt_security_monitor.py"]

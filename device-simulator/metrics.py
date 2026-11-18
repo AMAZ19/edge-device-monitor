@@ -59,3 +59,22 @@ MOTOR_CURRENT = Gauge(
     "iot_motor_current_amperes",
     "Latest valid motor current in amperes",
 )
+
+
+# MQTT security monitoring metrics
+
+MQTT_SECURITY_EVENTS = Counter(
+    "iot_mqtt_security_events_total",
+    "Total MQTT security events by type",
+    ["event_type"],
+)
+
+MQTT_SECURITY_LAST_EVENT_TIMESTAMP = Gauge(
+    "iot_mqtt_security_last_event_timestamp_seconds",
+    "Unix timestamp of the last MQTT security event",
+)
+
+MQTT_SECURITY_MONITOR_ERRORS = Counter(
+    "iot_mqtt_security_monitor_errors_total",
+    "Total MQTT security monitor processing errors",
+)
